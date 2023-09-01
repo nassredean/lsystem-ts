@@ -1,0 +1,8 @@
+# Node dependencies
+node_modules/
+
+# Package lock file
+package-lock.json
+
+# Generated JavaScript files
+www/js/
