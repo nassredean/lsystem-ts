@@ -4,13 +4,23 @@ import './reset.css';
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d");
 
-// L-System rules
-const rules = {
-  'F': 'FFF-FF-F-F+F+FF-F-FFF'
-};
+// const axiom = 'F';
+// // L-System rules
+// const rules: { [key: string]: string | undefined } = {
+//   'F': 'FFF-FF-F-F+F+FF-F-FFF'
+// };
+// let angle = Math.PI / 2;
 
-// Initial state
-let state = 'F';
+// const axiom = "F-F-F-F";
+// const rules: { [key: string]: string | undefined } = {
+//   'F': 'F-F+F+FF-F-F+F'
+// };
+// const angle = Math.PI / 2;
+
+
+const axiom = 'FF[+F-F+F]F-F[F-F-F]+F[+FF-F[+F+F]F-F-F]F[-F[+F+F-F-F]F-F]'
+const rules: { [key: string]: string | undefined } = {}
+const angle = Math.PI / 2;
 
 // Function to apply L-System rules for n iterations
 const iterate = (initial: string, n: number): string => {
@@ -18,7 +28,7 @@ const iterate = (initial: string, n: number): string => {
   for (let i = 0; i < n; i++) {
     let nextOutput = '';
     for (const char of output) {
-      nextOutput += rules[char] || char;
+      nextOutput += rules[char] as string || char;
     }
     output = nextOutput;
   }
@@ -28,16 +38,16 @@ const iterate = (initial: string, n: number): string => {
 const relCoordToPx = (x: number, y: number) => [x * canvas.width, (1 - y) * canvas.height];
 
 // Function to draw based on L-System string
-const drawLSystem = (lSystemString: string, length: number, angle: number) => {
-  // const stack: { x: number, y: number, angle: number }[] = [];
+const drawLSystem = (lSystemString: string, segmentLength: number) => {
+  const stack: { x: number, y: number, angle: number }[] = [];
   let [x, y] = relCoordToPx(0.5, 0.25);
   let currentAngle = Math.PI / 2;
 
   for (const char of lSystemString) {
     switch (char) {
       case 'F':
-        const newX = x + length * Math.cos(currentAngle);
-        const newY = y - length * Math.sin(currentAngle);
+        const newX = x + segmentLength * Math.cos(currentAngle);
+        const newY = y - segmentLength * Math.sin(currentAngle);
         
         if (ctx) {
           ctx.beginPath();
@@ -53,17 +63,17 @@ const drawLSystem = (lSystemString: string, length: number, angle: number) => {
       case '-':
         currentAngle -= angle;
         break;
-      // case '[':
-      //   stack.push({ x, y, angle: currentAngle });
-      //   break;
-      // case ']':
-      //   const popped = stack.pop();
-      //   if (popped) {
-      //     x = popped.x;
-      //     y = popped.y;
-      //     currentAngle = popped.angle;
-      //   }
-      //   break;
+      case '[':
+        stack.push({ x, y, angle: currentAngle });
+        break;
+      case ']':
+        const popped = stack.pop();
+        if (popped) {
+          x = popped.x;
+          y = popped.y;
+          currentAngle = popped.angle;
+        }
+        break;
     }
   }
 };
@@ -76,10 +86,10 @@ const draw = () => {
   }
 
   // Generate L-System string
-  const lSystemString = iterate(state, 1);
+  const lSystemString = iterate(axiom, 1);
 
   // Draw L-System
-  drawLSystem(lSystemString, 20, Math.PI / 2);
+  drawLSystem(lSystemString, 20);
 };
 
 const resizeCanvas = () => {
